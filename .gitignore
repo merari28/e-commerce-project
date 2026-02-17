@@ -1,5 +1,27 @@
+# Entorno virtual
 env/
+venv/
+.env
+
+# Base de datos
 db.sqlite3
+
+# Archivos Python
 __pycache__/
 *.pyc
+*.pyo
+
+# Media y archivos generados
 media/
+staticfiles/
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
