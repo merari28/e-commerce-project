@@ -16,7 +16,6 @@ def add_cart(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     product_variation = []
 
-
     if request.method == 'POST':
         for key in request.POST:
             value = request.POST.get(key)
@@ -27,7 +26,7 @@ def add_cart(request, product_id):
                     variation_value__iexact=value
                 )
                 product_variation.append(variation)
-            except:
+            except Variation.DoesNotExist:
                 pass
 
     try:
@@ -35,7 +34,6 @@ def add_cart(request, product_id):
     except Cart.DoesNotExist:
         cart = Cart.objects.create(cart_id=_cart_id(request))
     cart.save()
-
 
     cart_items = CartItem.objects.filter(product=product, cart=cart)
 
@@ -62,9 +60,7 @@ def add_cart(request, product_id):
             if product_variation:
                 item.variations.add(*product_variation)
             item.save()
-
     else:
-        
         cart_item = CartItem.objects.create(
             product=product,
             quantity=1,
@@ -77,23 +73,27 @@ def add_cart(request, product_id):
     return redirect('cart')
 
 
-def remove_cart(request, product_id):
-    cart = get_object_or_404(Cart, cart_id=_cart_id(request))
-    product = get_object_or_404(Product, id=product_id)
-    cart_item = get_object_or_404(CartItem, product=product, cart=cart)
-
-    if cart_item.quantity > 1:
-        cart_item.quantity -= 1
-        cart_item.save()
-    else:
-        cart_item.delete()
+def remove_cart(request, product_id, cart_item_id):
+    try:
+        cart_item = CartItem.objects.get(id=cart_item_id, cart__cart_id=_cart_id(request))
+        if cart_item.quantity > 1:
+            cart_item.quantity -= 1
+            cart_item.save()
+        else:
+            cart_item.delete()
+    except CartItem.DoesNotExist:
+        pass
 
     return redirect('cart')
 
 
-def remove_cart_item(request, cart_item_id):
-    cart_item = get_object_or_404(CartItem, id=cart_item_id)
-    cart_item.delete()
+def remove_cart_item(request, product_id, cart_item_id):
+    try:
+        cart_item = CartItem.objects.get(id=cart_item_id, cart__cart_id=_cart_id(request))
+        cart_item.delete()
+    except CartItem.DoesNotExist:
+        pass
+
     return redirect('cart')
 
 
