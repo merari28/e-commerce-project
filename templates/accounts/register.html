@@ -4,64 +4,80 @@
 {% block content %}
 
 <section class="section-content padding-y">
-  <div class="card mx-auto" style="max-width: 700px; margin-top:40px;">
-    <article class="card-body">
-      <header class="mb-4">
-        <h4 class="card-title text-center">Registro de Usuario</h4>
-      </header>
+  <div class="container">
+    <div class="row justify-content-center">
 
-      <form method="POST" autocomplete="off">
-        {% csrf_token %}
+      <div class="col-md-6">
 
-        <div class="form-row">
-          <div class="form-group col-md-6">
-            <label>Nombre</label>
-            {{ form.first_name }}
-          </div>
+        <div class="card mt-4">
+          <article class="card-body">
 
-          <div class="form-group col-md-6">
-            <label>Apellido</label>
-            {{ form.last_name }}
-          </div>
+            <header class="mb-4 text-center">
+              <h4 class="card-title">Registro de Usuario</h4>
+            </header>
+
+            {% include 'includes/alerts.html' %}
+
+            <form method="POST" autocomplete="off">
+              {% csrf_token %}
+
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label>Nombre</label>
+                  {{ form.first_name }}
+                </div>
+
+                <div class="form-group col-md-6">
+                  <label>Apellido</label>
+                  {{ form.last_name }}
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label>Número Telefónico</label>
+                  {{ form.phone_number }}
+                </div>
+
+                <div class="form-group col-md-6">
+                  <label>Email</label>
+                  {{ form.email }}
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label>Crear contraseña</label>
+                  {{ form.password }}
+                </div>
+
+                <div class="form-group col-md-6">
+                  <label>Repetir contraseña</label>
+                  {{ form.confirm_password }}
+                </div>
+              </div>
+
+              <div class="form-group">
+                <button type="submit" class="btn btn-primary btn-block">
+                  Registrarse
+                </button>
+              </div>
+
+              {{ form.email.errors}}
+              {{ form.non_field_errors }}
+
+            </form>
+
+            <p class="text-center mt-4">
+              ¿Ya tienes cuenta? <a href="{% url 'login' %}">Iniciar sesión</a>
+            </p>
+
+          </article>
         </div>
 
-        <div class="form-row">
-          <div class="form-group col-md-6">
-            <label>Número Telefónico</label>
-            {{ form.phone_number }}
-          </div>
+      </div>
 
-          <div class="form-group col-md-6">
-            <label>Email</label>
-            {{ form.email }}
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group col-md-6">
-            <label>Crear contraseña</label>
-            {{ form.password }}
-          </div>
-
-          <div class="form-group col-md-6">
-            <label>Repetir contraseña</label>
-            {{ form.confirm_password }}
-          </div>
-        </div>
-
-        <div class="form-group">
-          <button type="submit" class="btn btn-primary btn-block">
-            Registrarse
-          </button>
-        </div>
-
-      </form>
-
-      <p class="text-center mt-4">
-        ¿Ya tienes cuenta? <a href="{% url 'login' %}">Iniciar sesión</a>
-      </p>
-
-    </article>
+    </div>
   </div>
 </section>
 

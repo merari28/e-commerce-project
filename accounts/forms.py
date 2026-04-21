@@ -5,12 +5,10 @@ from .models import Account
 class RegistrationForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput(attrs={
         'placeholder': 'Ingrese Password',
-        'class': 'form-control',
     }))
     
     confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={
         'placeholder': 'Repita Password',
-        'class': 'form-control',
     }))
 
     class Meta:
@@ -18,13 +16,27 @@ class RegistrationForm(forms.ModelForm):
         fields = ['first_name', 'last_name', 'phone_number', 'email', 'password']
         
     def __init__(self, *args, **kwargs):
-        super(RegistrationForm, self).__init__(*args, **kwargs)
-        self.fields['first_name'].widget.attrs['placeholder'] = 'Ingrese Nombre'
-        self.fields['last_name'].widget.attrs['placeholder'] = 'Ingrese Apellido'
-        self.fields['phone_number'].widget.attrs['placeholder'] = 'Ingrese Número de Teléfono'
-        self.fields['email'].widget.attrs['placeholder'] = 'Ingrese Correo Electrónico'
-        self.fields['password'].widget.attrs['placeholder'] = 'Ingrese Password'
-        self.fields['confirm_password'].widget.attrs['placeholder'] = 'Repita Password'
+        super().__init__(*args, **kwargs)
 
-        for field in self.fields:
-            self.fields[field].widget.attrs['class'] = 'form-control'    
+        placeholders = {
+            'first_name': 'Ingrese Nombre',
+            'last_name': 'Ingrese Apellido',
+            'phone_number': 'Ingrese Número de Teléfono',
+            'email': 'Ingrese Correo Electrónico',
+            'password': 'Ingrese Password',
+            'confirm_password': 'Repita Password',
+        }
+
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+            field.widget.attrs['placeholder'] = placeholders.get(field_name, '')
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get('password')
+        confirm_password = cleaned_data.get('confirm_password')
+
+        if password != confirm_password:
+            raise forms.ValidationError("Las contraseñas no coinciden")
+
+        return cleaned_data
