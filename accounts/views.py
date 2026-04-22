@@ -5,6 +5,12 @@ from django.contrib import messages
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
+from django.contrib.sites.shortcuts import get_current_site
+from django.template.loader import render_to_string
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.encoding import force_bytes, force_str
+from django.core.mail import EmailMessage
 
 
 def register(request):
@@ -18,7 +24,7 @@ def register(request):
             last_name = form.cleaned_data['last_name']
             phone_number = form.cleaned_data['phone_number']
             email = form.cleaned_data['email']
-            password = form.cleaned_data['password']
+            password = form.cleaned_data.get('password') or form.cleaned_data.get('password1')
 
             if Account.objects.filter(email=email).exists():
                 messages.error(request, 'El email ya está registrado')
@@ -35,21 +41,55 @@ def register(request):
             )
 
             user.phone_number = phone_number
+            user.is_active = False
             user.save()
 
-            messages.success(request, 'Usuario creado correctamente')
-            form = RegistrationForm() 
-            return render(request, 'accounts/register.html', {'form': form})
+            current_site = get_current_site(request)
+            mail_subject = 'Activa tu cuenta'
+            message = render_to_string('accounts/account_verification_email.html', {
+                'user': user,
+                'domain': current_site.domain,
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                'token': default_token_generator.make_token(user),
+            })
+
+            send_email = EmailMessage(mail_subject, message, to=[email])
+            send_email.send(fail_silently=False)
+
+            return redirect(f'/accounts/login/?command=verification&email={email}')
 
     return render(request, 'accounts/register.html', {'form': form})
 
 
+def activate_account(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = Account.objects.get(pk=uid)
+    except:
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        user.is_active = True
+        user.save()
+        messages.success(request, 'Cuenta activada correctamente')
+        return redirect('login')
+    else:
+        messages.error(request, 'Link de activación inválido')
+        return redirect('register')
+
+
 def login_view(request):
+    command = request.GET.get('command')
+    email = request.GET.get('email')
+
+    if command == 'verification':
+        messages.success(request, f'Te enviamos un correo a {email}')
+
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
 
-        user = authenticate(request, email=email, password=password)
+        user = authenticate(request, username=email, password=password)
 
         if user is not None and user.is_active:
             login(request, user)
@@ -60,9 +100,9 @@ def login_view(request):
 
     return render(request, 'accounts/login.html')
 
+
 @login_required(login_url='login')
 def logout_view(request):
     auth_logout(request)
     messages.success(request, 'Has cerrado sesión correctamente')
-    
     return redirect('login')
