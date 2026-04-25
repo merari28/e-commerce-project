@@ -93,16 +93,24 @@
         <div class="col-lg-3 col-sm-6 col-8 order-2 order-lg-3">
           <div class="d-flex justify-content-end mb-3 mb-lg-0">
 
-            
             <div class="widget-header">
               {% if user.is_authenticated %}
                 <small class="title text-muted">
                   Bienvenido {{ user.first_name|default:user.email }}!
                 </small>
                 <div>
-                  <a href="#">Dashboard</a>
+                  <a href="{% url 'dashboard' %}">Dashboard</a>
                   <span class="dark-transp"> | </span>
-                  <a href="{% url 'logout' %}">Salir</a>
+
+                  
+                  <form method="POST" action="{% url 'logout' %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit"
+                      style="border:none; background:none; padding:0; margin:0; color:#007bff; cursor:pointer;">
+                      Salir Sesion
+                    </button>
+                  </form>
+
                 </div>
               {% else %}
                 <small class="title text-muted">Bienvenido visitante!</small>
@@ -114,7 +122,6 @@
               {% endif %}
             </div>
 
-            
             <a href="{% url 'cart' %}" class="widget-header pl-3 ml-3">
               <div class="icon icon-sm rounded-circle border">
                 <i class="fa fa-shopping-cart"></i>

@@ -78,6 +78,11 @@ def activate_account(request, uidb64, token):
         return redirect('register')
 
 
+@login_required(login_url='login')
+def dashboard(request):
+    return render(request, 'accounts/dashboard.html')
+
+
 def login_view(request):
     command = request.GET.get('command')
     email = request.GET.get('email')
@@ -94,7 +99,7 @@ def login_view(request):
         if user is not None and user.is_active:
             login(request, user)
             messages.success(request, 'Inicio de sesión exitoso')
-            return redirect('home')
+            return redirect('dashboard')
         else:
             messages.error(request, 'Credenciales inválidas')
 
@@ -106,3 +111,65 @@ def logout_view(request):
     auth_logout(request)
     messages.success(request, 'Has cerrado sesión correctamente')
     return redirect('login')
+
+
+def forgotPassword(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+
+        if Account.objects.filter(email=email).exists():
+            user = Account.objects.get(email__exact=email)
+
+            current_site = get_current_site(request)
+            mail_subject = 'Restablecer contraseña'
+            body = render_to_string('accounts/reset_password_email.html', {
+                'user': user,
+                'domain': current_site.domain,
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                'token': default_token_generator.make_token(user),
+            })
+
+            send_email = EmailMessage(mail_subject, body, to=[email])
+            send_email.send(fail_silently=False)
+
+            messages.success(request, 'Se ha enviado un correo para restablecer tu contraseña')
+            return redirect('login')
+        else:
+            messages.error(request, 'El correo no existe')
+
+    return render(request, 'accounts/forgotPassword.html')
+
+
+def resetpassword_validate(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = Account._default_manager.get(pk=uid)
+    except(TypeError, ValueError, OverflowError, Account.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        request.session['uid'] = uid
+        messages.success(request, 'Por favor resetea tu password')
+        return redirect('resetPassword')
+    else:
+        messages.error(request, 'El link ha expirado')
+        return redirect('login')
+
+
+def resetPassword(request):
+    if request.method == 'POST':
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+
+        if password == confirm_password:
+            uid = request.session.get('uid')
+            user = Account.objects.get(pk=uid)
+            user.set_password(password)
+            user.save()
+            messages.success(request, 'Contraseña restablecida correctamente')
+            return redirect('login')
+        else:
+            messages.error(request, 'Las contraseñas no coinciden')
+            return redirect('resetPassword')
+
+    return render(request, 'accounts/resetPassword.html')

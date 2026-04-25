@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<section class="section-content padding-y">
+    {% include 'includes/alerts.html' %}
+
+  <div class="container">
+
+    <div class="row mb-4">
+      <div class="col-md-12">
+        <h2>Dashboard</h2>
+        <p>Bienvenido, <strong>{{ request.user.first_name }}</strong></p>
+      </div>
+    </div>
+
+    <div class="row">
+
+      <div class="col-md-4">
+        <div class="card text-center">
+          <div class="card-body">
+            <h5 class="card-title">Pedidos</h5>
+            <h3>{{ total_orders }}</h3>
+            <p class="text-muted">Total de pedidos realizados</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card text-center">
+          <div class="card-body">
+            <h5 class="card-title">Productos</h5>
+            <h3>{{ total_products }}</h3>
+            <p class="text-muted">Productos disponibles</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card text-center">
+          <div class="card-body">
+            <h5 class="card-title">Usuarios</h5>
+            <h3>{{ total_users }}</h3>
+            <p class="text-muted">Usuarios registrados</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="row mt-5">
+      <div class="col-md-12">
+        <div class="card">
+          <header class="card-header">
+            <h5>Últimos pedidos</h5>
+          </header>
+
+          <div class="card-body">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Cliente</th>
+                  <th>Fecha</th>
+                  <th>Total</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {% for order in orders %}
+                <tr>
+                  <td>{{ order.id }}</td>
+                  <td>{{ order.user.first_name }}</td>
+                  <td>{{ order.created_at }}</td>
+                  <td>{{ order.total }}</td>
+                  <td>{{ order.status }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="5" class="text-center">No hay pedidos</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}
