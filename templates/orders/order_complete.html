@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="section-content padding-y">
+  <div class="container text-center">
+
+    <h2 class="text-success">✅ Pago realizado con éxito</h2>
+    <p>Tu pedido ha sido procesado correctamente.</p>
+
+    <a href="{% url 'store' %}" class="btn btn-primary mt-3">
+      Volver a la tienda
+    </a>
+
+  </div>
+</section>
+{% endblock %}

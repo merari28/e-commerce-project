@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load l10n %}
+
+{% block content %}
+
+<section class="section-content padding-y">
+  <div class="container">
+    <div class="row">
+
+      <aside class="col-lg-7">
+        <div class="card shadow-sm">
+          <div class="card-body">
+
+            <h4 class="card-title mb-4">🧾 Resumen de tu pedido</h4>
+
+            <div class="mb-3">
+              <p><strong>{{ order.full_name }}</strong></p>
+              <p class="text-muted">{{ order.email }} | {{ order.phone }}</p>
+              <p class="text-muted">
+                {{ order.full_address }},
+                {{ order.city }},
+                {{ order.state }}, {{ order.country }}
+              </p>
+              {% if order.order_note %}
+                <b class="text-muted">
+                  Nota: {{ order.order_note }}
+                </b>
+              {% endif %}
+            </div>
+
+            <hr>
+
+            <h5>Productos</h5>
+
+            {% for item in cart_items %}
+            <div class="d-flex justify-content-between mb-2">
+              <div>
+                {{ item.product.product_name }}  
+                <small class="text-muted">x{{ item.quantity }}</small>
+              </div>
+              <div>
+                US {% localize off %}{{ item.sub_total|floatformat:2 }}{% endlocalize %}
+              </div>
+            </div>
+            {% endfor %}
+
+            <hr>
+
+            <div class="d-flex justify-content-between">
+              <span>Subtotal</span>
+              <span>US {% localize off %}{{ total|floatformat:2 }}{% endlocalize %}</span>
+            </div>
+
+            <div class="d-flex justify-content-between">
+              <span>Impuesto (2%)</span>
+              <span>US {% localize off %}{{ order.tax|floatformat:2 }}{% endlocalize %}</span>
+            </div>
+
+            <hr>
+
+            <div class="d-flex justify-content-between">
+              <h5>Total</h5>
+              <h4 class="text-success">
+                US {% localize off %}{{ order.order_total|floatformat:2 }}{% endlocalize %}
+              </h4>
+            </div>
+
+          </div>
+        </div>
+      </aside>
+
+      <aside class="col-lg-5">
+        <div class="card shadow-sm">
+          <div class="card-body">
+
+            <h4 class="card-title mb-4">💳 Pagar con PayPal</h4>
+
+            <div id="paypal-button-container"></div>
+
+          </div>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+</section>
+
+<script src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD"></script>
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        let cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            let cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+const csrftoken = getCookie('csrftoken');
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    console.log("PayPal cargado:", typeof paypal);
+    console.log("TOTAL:", '{{ order_total_str }}');
+
+    paypal.Buttons({
+
+        createOrder: function(data, actions) {
+            return actions.order.create({
+                purchase_units: [{
+                    amount: {
+                        value: '{{ order_total_str }}'
+                    }
+                }]
+            });
+        },
+
+        // 🔥 CAMBIO CLAVE AQUÍ
+        onApprove: function(data, actions) {
+
+            console.log("ORDER ID:", data.orderID);
+
+            fetch("{% url 'payments' %}", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                },
+                body: JSON.stringify({
+                    orderID: data.orderID,
+                    transID: data.orderID,
+                    payment_method: "PayPal",
+                    status: "COMPLETED",
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log("Respuesta backend:", data);
+                window.location.href = data.url;
+            });
+
+        },
+
+        onCancel: function(data) {
+            console.log("Pago cancelado", data);
+            alert("Pago cancelado");
+        },
+
+        onError: function(err) {
+            console.log("ERROR PAYPAL:", err);
+            alert("Error en el pago");
+        }
+
+    }).render('#paypal-button-container');
+
+});
+</script>
+
+{% endblock %}
