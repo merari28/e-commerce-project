@@ -2,13 +2,18 @@ import datetime
 import json
 
 from django.shortcuts import redirect, render
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.decorators import login_required
-from django.urls import reverse  # 🔥 IMPORTANTE
+from django.urls import reverse  
+
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string, get_template
 
 from carts.models import CartItem
 from .models import Order, OrderProduct, Payment
 from .forms import OrderForm
+
+from xhtml2pdf import pisa
 
 
 @login_required(login_url='login')
@@ -27,23 +32,33 @@ def payments(request):
         except Order.DoesNotExist:
             return JsonResponse({'error': 'Order not found'}, status=404)
 
-        payment = Payment(
+        cart_items = CartItem.objects.filter(user=request.user)
+
+
+        for item in cart_items:
+            if item.product.stock < item.quantity:
+                return JsonResponse({
+                    'error': f'Stock insuficiente para {item.product.product_name}'
+                })
+
+
+        payment = Payment.objects.create(
             user=request.user,
             payment_id=body.get('transID'),
             payment_method=body.get('payment_method'),
             amount_paid=order.order_total,
             status=body.get('status'),
         )
-        payment.save()
 
         order.payment = payment
         order.is_ordered = True
         order.save()
 
-        cart_items = CartItem.objects.filter(user=request.user)
 
         for item in cart_items:
-            OrderProduct.objects.create(
+            product = item.product
+
+            orderproduct = OrderProduct.objects.create(
                 order_id=order.id,
                 payment=payment,
                 user_id=request.user.id,
@@ -53,9 +68,40 @@ def payments(request):
                 ordered=True,
             )
 
+            variations = item.variations.all()
+            orderproduct.variation.set(variations)
+
+            product.stock -= item.quantity
+            product.save()
+
+
         cart_items.delete()
 
-        # 🔥 CAMBIO CLAVE AQUÍ
+        orderproducts = OrderProduct.objects.filter(order=order)
+
+
+        mail_subject = 'Confirmación de compra'
+
+        message = render_to_string('orders/order_email.html', {
+            'order': order,
+            'orderproducts': orderproducts,
+        })
+
+        to_email = order.email
+
+        send_email = EmailMessage(
+            mail_subject,
+            message,
+            to=[to_email]
+        )
+
+        send_email.content_subtype = "html"
+
+        try:
+            send_email.send(fail_silently=False)
+        except Exception as e:
+            print(e)
+
         return JsonResponse({
             'url': reverse('order_complete')
         })
@@ -143,4 +189,53 @@ def place_order(request, total=0, quantity=0):
 
 @login_required(login_url='login')
 def order_complete(request):
-    return render(request, 'orders/order_complete.html')
+    order_number = request.session.get('order_number')
+
+    try:
+        order = Order.objects.get(order_number=order_number)
+    except Order.DoesNotExist:
+        return redirect('store')
+
+    orderproducts = OrderProduct.objects.filter(order=order)
+
+
+    for item in orderproducts:
+        item.subtotal = float(item.product_price) * item.quantity
+
+    context = {
+        'order': order,
+        'orderproducts': orderproducts,
+    }
+
+    return render(request, 'orders/order_complete.html', context)
+
+
+@login_required(login_url='login')
+def download_invoice(request, order_number):
+    try:
+        order = Order.objects.get(
+            order_number=order_number,
+            user=request.user
+        )
+    except Order.DoesNotExist:
+        return redirect('store')
+
+    orderproducts = OrderProduct.objects.filter(order=order)
+
+    template = get_template('orders/invoice.html')
+    html = template.render({
+        'order': order,
+        'orderproducts': orderproducts
+    })
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename=invoice_{order_number}.pdf'
+
+    result = pisa.CreatePDF(html, dest=response)
+
+    if result.err:
+        return HttpResponse("Error generando PDF", status=500)
+
+    return response
+
+

@@ -1,0 +1,28 @@
+<h2>Gracias por tu compra 🛒</h2>
+
+<p>Hola {{ order.full_name }},</p>
+
+<p>Tu pedido ha sido procesado correctamente.</p>
+
+<p><strong>Número de orden:</strong> {{ order.order_number }}</p>
+
+<hr>
+
+<h3>Detalle de la compra:</h3>
+
+<ul>
+{% for item in orderproducts %}
+    <li>
+        {{ item.product.product_name }} (x{{ item.quantity }})<br>
+        {% for v in item.variation.all %}
+            - {{ v.variation_category }}: {{ v.variation_value }}<br>
+        {% endfor %}
+    </li>
+{% endfor %}
+</ul>
+
+<hr>
+
+<p><strong>Total:</strong> {{ order.order_total }}</p>
+
+<p>Gracias por comprar con nosotros 💙</p>
