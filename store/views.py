@@ -1,14 +1,16 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
 
 from carts.models import CartItem
 from carts.views import _cart_id
-from .models import Product
+from .models import Product, ReviewRating
+from .forms import ReviewForm
 from category.models import Category
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db.models import Q
+from django.db.models import Q, Avg
 
 
-# Create your views here. Updarted views.py file with the following code:
+
 def store(request, category_slug=None):
     categories = None
     products = None
@@ -38,18 +40,70 @@ def store(request, category_slug=None):
 def product_detail(request, category_slug, product_slug):
     try:
         single_product = Product.objects.get(category__slug=category_slug, slug=product_slug)
-        in_cart = CartItem.objects.filter(cart__cart_id=_cart_id(request), product=single_product).exists
+        in_cart = CartItem.objects.filter(cart__cart_id=_cart_id(request), product=single_product).exists()
+
+        reviews = ReviewRating.objects.filter(product=single_product, status=True)
+        average_rating = reviews.aggregate(Avg('rating'))['rating__avg']
+
     except Exception as e:
-        raise e 
-    
-    
+        raise e
+
     context = {
         'single_product': single_product,
         'in_cart': in_cart,
+        'reviews': reviews,
+        'average_rating': average_rating,
     }
-    
+
     return render(request, 'store/product_detail.html', context)
 
+
+def submit_review(request, product_id):
+    url = request.META.get('HTTP_REFERER')
+
+    if request.method == 'POST':
+        if not request.user.is_authenticated:
+            messages.error(request, 'Debes iniciar sesión para dejar una reseña.')
+            return redirect(url)
+
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            messages.error(request, 'El producto no existe.')
+            return redirect('store')
+
+        form = ReviewForm(request.POST)
+
+        if form.is_valid():
+            try:
+                existing_review = ReviewRating.objects.get(
+                    user=request.user,
+                    product=product
+                )
+
+                existing_review.subject = form.cleaned_data['subject']
+                existing_review.review = form.cleaned_data['review']
+                existing_review.rating = form.cleaned_data['rating']
+                existing_review.status = True
+                existing_review.save()
+
+                messages.success(request, 'Tu reseña fue actualizada correctamente.')
+                return redirect(url)
+
+            except ReviewRating.DoesNotExist:
+                review = form.save(commit=False)
+                review.user = request.user
+                review.product = product
+                review.status = True
+                review.save()
+
+                messages.success(request, 'Tu reseña fue enviada correctamente.')
+                return redirect(url)
+
+        messages.error(request, 'Por favor verifica los datos de la reseña.')
+        return redirect(url)
+
+    return redirect('store')
 
 def search(request):
     if 'keyword' in request.GET:

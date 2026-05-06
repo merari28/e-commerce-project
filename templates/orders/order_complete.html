@@ -79,13 +79,12 @@
     <div class="col-md-4">
         <ul class="list-group shadow-sm">
 
-            <!-- Impuesto -->
             <li class="list-group-item d-flex justify-content-between">
                 <span>Impuesto:</span>
                 <span>${{ order.tax|floatformat:2 }}</span>
             </li>
 
-            <!-- Total -->
+
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 <span class="fw-bold fs-5 text-success">Total:</span>
                 <strong class="fs-5">${{ order.order_total|floatformat:2 }}</strong>
