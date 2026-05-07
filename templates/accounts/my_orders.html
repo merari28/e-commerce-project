@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<section class="section-content padding-y bg">
+<div class="container">
+
+    <div class="row">
+
+        {% include 'includes/dashboard_sidebar.html' %}
+
+        <main class="col-md-9">
+
+            <article class="card shadow-sm">
+
+                <header class="card-header">
+                    <strong class="d-inline-block mr-3">
+                        Mis Pedidos
+                    </strong>
+                </header>
+
+                <div class="card-body">
+
+                    {% if orders %}
+
+                    <div class="table-responsive">
+
+                        <table class="table table-hover">
+
+                            <thead class="thead-light">
+
+                                <tr>
+                                    <th>N° Pedido</th>
+                                    <th>Nombre</th>
+                                    <th>Teléfono</th>
+                                    <th>Total</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                    <th></th>
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                {% for order in orders %}
+
+                                <tr>
+
+                                    <td>
+                                        {{ order.order_number }}
+                                    </td>
+
+                                    <td>
+                                        {{ order.full_name }}
+                                    </td>
+
+                                    <td>
+                                        {{ order.phone }}
+                                    </td>
+
+                                    <td>
+                                        ${{ order.order_total }}
+                                    </td>
+
+                                    <td>
+                                        {{ order.created_at|date:"d/m/Y" }}
+                                    </td>
+
+                                    <td>
+
+                                        {% if order.status == 'New' %}
+                                            <span class="badge badge-warning">
+                                                Nuevo
+                                            </span>
+
+                                        {% elif order.status == 'Accepted' %}
+                                            <span class="badge badge-info">
+                                                Aceptado
+                                            </span>
+
+                                        {% elif order.status == 'Completed' %}
+                                            <span class="badge badge-success">
+                                                Completado
+                                            </span>
+
+                                        {% elif order.status == 'Cancelled' %}
+                                            <span class="badge badge-danger">
+                                                Cancelado
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                    <td>
+
+                                        <a href="#"
+                                           class="btn btn-primary btn-sm">
+
+                                            Ver
+
+                                        </a>
+
+                                    </td>
+
+                                </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                    {% else %}
+
+                    <div class="text-center py-5">
+
+                        <img src="{% static 'images/empty-cart.png' %}"
+                             width="120"
+                             class="mb-3">
+
+                        <h5>No tienes pedidos todavía</h5>
+
+                        <p class="text-muted">
+                            Tus compras aparecerán aquí.
+                        </p>
+
+                        <a href="{% url 'store' %}"
+                           class="btn btn-primary">
+
+                            Ir a la tienda
+
+                        </a>
+
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+            </article>
+
+        </main>
+
+    </div>
+
+</div>
+</section>
+
+{% endblock %}

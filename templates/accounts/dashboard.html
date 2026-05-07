@@ -28,8 +28,20 @@
                   </p>
                 </div>
 
-                <div class="text-primary d-none d-md-block">
-                  <i class="fa fa-user-circle fa-3x"></i>
+                <div class="d-none d-md-block text-center">
+                  {% if userprofile.profile_picture %}
+                    <img src="{{ userprofile.profile_picture.url }}"
+                         class="rounded-circle border"
+                         width="90"
+                         height="90"
+                         style="object-fit: cover;">
+                  {% else %}
+                    <img src="{% static 'images/default-user.png' %}"
+                         class="rounded-circle border"
+                         width="90"
+                         height="90"
+                         style="object-fit: cover;">
+                  {% endif %}
                 </div>
 
               </div>
@@ -39,77 +51,54 @@
 
         <div class="row">
 
-          <div class="col-md-4">
-            <div class="card text-center">
+          <div class="col-md-4 mb-4">
+            <div class="card text-center shadow-sm border-0 h-100">
               <div class="card-body">
                 <h5 class="card-title">Pedidos</h5>
-                <h3>{{ total_orders }}</h3>
-                <p class="text-muted">Total de pedidos realizados</p>
+                <h3>{{ orders_count }}</h3>
+                <p class="text-muted mb-0">Total de pedidos realizados</p>
               </div>
             </div>
           </div>
 
-          <div class="col-md-4">
-            <div class="card text-center">
+          <div class="col-md-4 mb-4">
+            <div class="card text-center shadow-sm border-0 h-100">
               <div class="card-body">
-                <h5 class="card-title">Productos</h5>
-                <h3>{{ total_products }}</h3>
-                <p class="text-muted">Productos disponibles</p>
+                <h5 class="card-title">Calificaciones</h5>
+
+                {% if average_rating %}
+                  <h3>{{ average_rating|floatformat:1 }}</h3>
+
+                  <div class="text-warning mb-2">
+                    <i class="fa fa-star"></i>
+                    <i class="fa fa-star"></i>
+                    <i class="fa fa-star"></i>
+                    <i class="fa fa-star"></i>
+                    <i class="fa fa-star"></i>
+                  </div>
+
+                  <p class="text-muted mb-0">
+                    Promedio basado en {{ reviews_count }} reseñas
+                  </p>
+                {% else %}
+                  <h3>0.0</h3>
+
+                  <div class="text-muted mb-2">
+                    <i class="fa fa-star-o"></i>
+                    <i class="fa fa-star-o"></i>
+                    <i class="fa fa-star-o"></i>
+                    <i class="fa fa-star-o"></i>
+                    <i class="fa fa-star-o"></i>
+                  </div>
+
+                  <p class="text-muted mb-0">
+                    Todavía no realizaste reseñas
+                  </p>
+                {% endif %}
               </div>
             </div>
           </div>
 
-          <div class="col-md-4">
-            <div class="card text-center">
-              <div class="card-body">
-                <h5 class="card-title">Usuarios</h5>
-                <h3>{{ total_users }}</h3>
-                <p class="text-muted">Usuarios registrados</p>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        <div class="row mt-5">
-          <div class="col-md-12">
-            <div class="card">
-              <header class="card-header">
-                <h5>Últimos pedidos</h5>
-              </header>
-
-              <div class="card-body">
-                <table class="table table-striped">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Cliente</th>
-                      <th>Fecha</th>
-                      <th>Total</th>
-                      <th>Estado</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {% for order in orders %}
-                    <tr>
-                      <td>{{ order.id }}</td>
-                      <td>{{ order.user.first_name }}</td>
-                      <td>{{ order.created_at }}</td>
-                      <td>{{ order.total }}</td>
-                      <td>{{ order.status }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                      <td colspan="5" class="text-center">No hay pedidos</td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-
-                </table>
-              </div>
-            </div>
-          </div>
         </div>
 
       </main>
