@@ -57,9 +57,13 @@ WSGI_APPLICATION = "ecommerce.wsgi.application"
 AUTH_USER_MODEL = "accounts.Account"
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 'MerariPostgres2026!',
+        'HOST': 'merari-ecommerce-db.ccn0eaac2w5b.us-east-1.rds.amazonaws.com',
+        'PORT': '5432',
     }
 }
 
