@@ -54,18 +54,43 @@
         font-weight: bold;
         color: #333;
     }
+
+    .thumbs-wrap img {
+        cursor: pointer;
+        border-radius: 4px;
+    }
+
+    .thumbs-wrap img:hover {
+        border: 2px solid #3167eb;
+    }
 </style>
 
 <section class="section-content padding-y bg">
     <div class="container">
 
-        <!-- ============================ COMPONENT 1 ================================= -->
         <div class="card">
             <div class="row no-gutters">
                 <aside class="col-md-6">
                     <article class="gallery-wrap">
                         <div class="img-big-wrap">
-                            <a href="#"><img src="{{ single_product.images.url }}"></a>
+                            <a href="{{ single_product.images.url }}" target="_blank">
+                                <img src="{{ single_product.images.url }}">
+                            </a>
+                        </div>
+
+                        <div class="thumbs-wrap mt-3">
+                            <div class="row">
+                                {% for image in product_gallery %}
+                                    <div class="col-3 mb-2">
+                                        <a href="{{ image.image.url }}" target="_blank">
+                                            <img src="{{ image.image.url }}"
+                                                 class="img-fluid img-thumbnail"
+                                                 style="height: 90px; width: 100%; object-fit: cover;"
+                                                 alt="{{ single_product.product_name }}">
+                                        </a>
+                                    </div>
+                                {% endfor %}
+                            </div>
                         </div>
                     </article>
                 </aside>
@@ -144,7 +169,6 @@
                 </main>
             </div>
         </div>
-        <!-- ============================ COMPONENT 1 END .// ================================= -->
 
         <br>
 
@@ -209,15 +233,8 @@
                             </div>
 
                             {% if user.is_authenticated %}
-
-                                <form action="{% url 'submit_review' single_product.id %}" method="POST">
-                                    {% csrf_token %}
-
-                                    <button type="submit" class="btn btn-primary">Enviar reseña</button>
-                                </form>
-
+                                <button type="submit" class="btn btn-primary">Enviar reseña</button>
                             {% else %}
-
                                 <p class="text-muted">
                                     Puedes ver las reseñas de este producto, pero debes iniciar sesión para dejar tu opinión.
                                 </p>
@@ -225,7 +242,6 @@
                                 <a href="{% url 'login' %}" class="btn btn-primary">
                                     Iniciar sesión
                                 </a>
-
                             {% endif %}
                         </form>
                     </div>

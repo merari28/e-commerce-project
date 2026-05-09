@@ -3,7 +3,7 @@ from django.contrib import messages
 
 from carts.models import CartItem
 from carts.views import _cart_id
-from .models import Product, ReviewRating
+from .models import Product, ReviewRating, ProductGallery
 from .forms import ReviewForm
 from category.models import Category
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
@@ -44,6 +44,7 @@ def product_detail(request, category_slug, product_slug):
 
         reviews = ReviewRating.objects.filter(product=single_product, status=True)
         average_rating = reviews.aggregate(Avg('rating'))['rating__avg']
+        product_gallery = ProductGallery.objects.filter(product=single_product)
 
     except Exception as e:
         raise e
@@ -53,6 +54,7 @@ def product_detail(request, category_slug, product_slug):
         'in_cart': in_cart,
         'reviews': reviews,
         'average_rating': average_rating,
+        'product_gallery': product_gallery,
     }
 
     return render(request, 'store/product_detail.html', context)
