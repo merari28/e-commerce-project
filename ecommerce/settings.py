@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from django.contrib.messages import constants as messages
 
@@ -56,16 +57,26 @@ WSGI_APPLICATION = "ecommerce.wsgi.application"
 
 AUTH_USER_MODEL = "accounts.Account"
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'MerariPostgres2026!',
-        'HOST': 'merari-ecommerce-db.ccn0eaac2w5b.us-east-1.rds.amazonaws.com',
-        'PORT': '5432',
+# Use a local SQLite database for the self-contained demo when USE_SQLITE=1,
+# otherwise fall back to the remote PostgreSQL (AWS RDS) configuration.
+if os.environ.get('USE_SQLITE') == '1':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'postgres',
+            'USER': 'postgres',
+            'PASSWORD': 'MerariPostgres2026!',
+            'HOST': 'merari-ecommerce-db.ccn0eaac2w5b.us-east-1.rds.amazonaws.com',
+            'PORT': '5432',
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -95,7 +106,10 @@ MESSAGES_TAGS = {
     messages.ERROR: "danger",
 }
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = os.environ.get(
+    'EMAIL_BACKEND',
+    'django.core.mail.backends.smtp.EmailBackend'
+)
 
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
